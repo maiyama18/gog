@@ -16,6 +16,12 @@ type Config struct {
 	Bare                    bool
 }
 
+var DefaultConfig = Config{
+	RepositoryFormatVersion: 0,
+	FileMode:                true,
+	Bare:                    true,
+}
+
 func NewConfig(confPath string) (*Config, error) {
 	f, err := os.Open(confPath)
 	if err != nil {
@@ -24,11 +30,7 @@ func NewConfig(confPath string) (*Config, error) {
 	sc := bufio.NewScanner(f)
 
 	// default conf
-	conf := &Config{
-		RepositoryFormatVersion: 0,
-		FileMode:                true,
-		Bare:                    true,
-	}
+	conf := &DefaultConfig
 
 	for sc.Scan() {
 		line := strings.TrimSpace(sc.Text())
