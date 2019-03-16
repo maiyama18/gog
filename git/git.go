@@ -5,11 +5,14 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"path"
 	"strconv"
 	"strings"
 )
+
+const defaultDescription = "Unnamed repository; edit this file 'description' to name the repository.\n"
 
 type Config struct {
 	RepositoryFormatVersion int
@@ -65,12 +68,72 @@ func NewConfig(confFile io.Reader) (*Config, error) {
 	return conf, nil
 }
 
+func (c *Config) Format() string {
+	return fmt.Sprintf(`[core]
+	repositoryformatversion = %d
+	filemode = %t
+	bare = %t`, c.RepositoryFormatVersion, c.FileMode, c.Bare)
+}
+
 type Repository struct {
 	WorkTree string
 	GitDir   string
 	Conf     *Config
 }
 
+func CreateRepository(workTree string) (*Repository, error) {
+	repo, err := NewRepository(workTree, true)
+	if err != nil {
+		return nil, err
+	}
+
+	// make sure that workTree is nonexistent or empty
+	if isExistingFile(workTree) {
+		return nil, fmt.Errorf("work tree already exist as regular file: %s", workTree)
+	}
+
+	if isExistingDir(workTree) {
+		files, err := ioutil.ReadDir(workTree)
+		if err != nil {
+			return nil, err
+		}
+		if len(files) > 0 {
+			return nil, fmt.Errorf("work tree is not empty: %s", workTree)
+		}
+	} else {
+		if err := os.MkdirAll(workTree, 0777); err != nil {
+			return nil, err
+		}
+	}
+
+	// create subdirectories of .git if not exists
+	if _, err := repo.gitDir(true, "branches"); err != nil {
+		return nil, err
+	}
+	if _, err := repo.gitDir(true, "objects"); err != nil {
+		return nil, err
+	}
+	if _, err := repo.gitDir(true, "refs", "tags"); err != nil {
+		return nil, err
+	}
+	if _, err := repo.gitDir(true, "refs", "heads"); err != nil {
+		return nil, err
+	}
+
+	if err := repo.writeToGitFile(defaultDescription, "description"); err != nil {
+		return nil, err
+	}
+	if err := repo.writeToGitFile("ref: refs/heads/master\n", "HEAD"); err != nil {
+		return nil, err
+	}
+	if err := repo.writeToGitFile(repo.Conf.Format(), "config"); err != nil {
+		return nil, err
+	}
+
+	return repo, nil
+}
+
+// TODO: privateにする
 // force disables all check for initializing repository, which is used when 'git init'.
 func NewRepository(workTree string, force bool) (*Repository, error) {
 	gitDir := path.Join(workTree, ".git")
@@ -93,7 +156,6 @@ func NewRepository(workTree string, force bool) (*Repository, error) {
 	return repo, nil
 }
 
-// file returns
 func (r *Repository) gitFile(mkdir bool, relPath ...string) (string, error) {
 	if len(relPath) == 0 {
 		return "", errors.New("filepath not provided")
@@ -121,6 +183,22 @@ func (r *Repository) gitDir(mkdir bool, elems ...string) (string, error) {
 		return dirPath, nil
 	}
 	return dirPath, nil
+}
+
+func (r *Repository) writeToGitFile(content string, relPath ...string) error {
+	filePath, err := r.gitFile(false, relPath...)
+	if err != nil {
+		return err
+	}
+	f, err := os.Open(filePath)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	if _, err := f.WriteString(content); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (r *Repository) readConf(force bool, confPath string) error {

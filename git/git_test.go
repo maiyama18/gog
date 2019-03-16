@@ -53,6 +53,7 @@ func TestNewConfig(t *testing.T) {
 	}
 }
 
+var nonExistentDirectory = "./git/testdata/nonexistent01"
 var notGitRepository = "./git/testdata/not_repository01"
 var gitRepository = "./git/testdata/repository01"
 
@@ -64,6 +65,16 @@ func TestNewRepository(t *testing.T) {
 		expectedRepository *Repository
 		expectedErrMsg     string
 	}{
+		{
+			name:     "success - nonexistent directory",
+			workTree: nonExistentDirectory,
+			force:    true,
+			expectedRepository: &Repository{
+				WorkTree: nonExistentDirectory,
+				GitDir:   path.Join(nonExistentDirectory, ".git"),
+				Conf:     &DefaultConfig,
+			},
+		},
 		{
 			name:     "success - not git repository",
 			workTree: notGitRepository,
@@ -83,6 +94,12 @@ func TestNewRepository(t *testing.T) {
 				GitDir:   path.Join(gitRepository, ".git"),
 				Conf:     &DefaultConfig,
 			},
+		},
+		{
+			name:           "success - nonexistent directory withour force",
+			workTree:       nonExistentDirectory,
+			force:          false,
+			expectedErrMsg: "not a git repository: git/testdata/nonexistent01/.git",
 		},
 		{
 			name:           "failure - not git repository without force",
