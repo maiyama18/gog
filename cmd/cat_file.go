@@ -11,10 +11,11 @@ var catFileCmd = &cobra.Command{
 	Use:   "cat-file",
 	Short: "show git object contents",
 	Run: func(cmd *cobra.Command, args []string) {
-		var kind, sha string
 		if len(args) != 2 {
 			handleError("type and sha-1 of the object should be provided")
 		}
+		kind := args[0]
+		sha := args[1]
 
 		pwd, err := os.Getwd()
 		if err != nil {
