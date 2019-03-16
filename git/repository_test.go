@@ -4,12 +4,13 @@ import (
 	"github.com/stretchr/testify/assert"
 	"os"
 	"path"
+	"strings"
 	"testing"
 )
 
-var nonExistentDirectory = "./git/testdata/nonexistent01"
-var notGitRepository = "./git/testdata/not_repository01"
-var gitRepository = "./git/testdata/repository01"
+var nonExistentDirectory = "./testdata/nonexistent01"
+var notGitRepository = "./testdata/not_repository01"
+var gitRepository = "./testdata/repository01"
 
 func TestNewRepository(t *testing.T) {
 	tests := []struct {
@@ -53,13 +54,13 @@ func TestNewRepository(t *testing.T) {
 			name:           "failure - nonexistent directory without force",
 			workTree:       nonExistentDirectory,
 			force:          false,
-			expectedErrMsg: "not a git repository: git/testdata/nonexistent01/.git",
+			expectedErrMsg: "not a git repository",
 		},
 		{
 			name:           "failure - not git repository without force",
 			workTree:       notGitRepository,
 			force:          false,
-			expectedErrMsg: "not a git repository: git/testdata/not_repository01/.git",
+			expectedErrMsg: "not a git repository",
 		},
 	}
 	for _, test := range tests {
@@ -69,14 +70,14 @@ func TestNewRepository(t *testing.T) {
 			if test.expectedErrMsg == "" {
 				assert.Nil(t, err)
 			} else {
-				assert.EqualError(t, err, test.expectedErrMsg)
+				assert.True(t, strings.Contains(err.Error(), test.expectedErrMsg))
 			}
 			assert.Equal(t, test.expectedRepository, repo)
 		})
 	}
 }
 
-const emptyDirectory = "./git/testdata/empty01"
+const emptyDirectory = "./testdata/empty01"
 
 func TestCreateRepository(t *testing.T) {
 	tests := []struct {
