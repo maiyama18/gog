@@ -79,14 +79,14 @@ func NewRepository(workTree string, force bool) (*Repository, error) {
 		return nil, fmt.Errorf("not a git repository: %s", gitDir)
 	}
 
-	repo := &Repository{WorkTree: workTree, GitDir: gitDir}
+	repo := &Repository{WorkTree: workTree, GitDir: gitDir, Conf: &DefaultConfig}
 
 	confPath, err := repo.gitFile(false, "config")
-	if err != nil {
+	if !force && err != nil {
 		return nil, err
 	}
 
-	if err := repo.readConf(force, confPath); err != nil {
+	if err := repo.readConf(force, confPath); !force && err != nil {
 		return nil, err
 	}
 
@@ -94,17 +94,17 @@ func NewRepository(workTree string, force bool) (*Repository, error) {
 }
 
 // file returns
-func (r *Repository) gitFile(mkdir bool, elems ...string) (string, error) {
-	if len(elems) == 0 {
+func (r *Repository) gitFile(mkdir bool, relPath ...string) (string, error) {
+	if len(relPath) == 0 {
 		return "", errors.New("filepath not provided")
 	}
 
-	elems = append([]string{r.GitDir}, elems[:len(elems)-1]...)
-	dirPath, err := r.gitDir(mkdir, elems...)
+	dirRelPath := relPath[:len(relPath)-1]
+	dirPath, err := r.gitDir(mkdir, dirRelPath...)
 	if err != nil {
 		return "", err
 	}
-	return dirPath, nil
+	return path.Join(dirPath, relPath[len(relPath)-1]), nil
 }
 
 func (r *Repository) gitDir(mkdir bool, elems ...string) (string, error) {
