@@ -1,6 +1,7 @@
 package git
 
 import (
+	"fmt"
 	"github.com/stretchr/testify/assert"
 	"os"
 	"path"
@@ -78,6 +79,8 @@ func TestNewRepository(t *testing.T) {
 }
 
 const emptyDirectory = "./testdata/empty01"
+const notEmptyDirectory = "./testdata/not_empty01"
+const regularFile = "./testdata/regular_file01"
 
 func TestCreateRepository(t *testing.T) {
 	tests := []struct {
@@ -109,6 +112,18 @@ func TestCreateRepository(t *testing.T) {
 				_ = os.RemoveAll(nonExistentDirectory)
 			},
 		},
+		{
+			name:           "failure - path already exists as file",
+			repositoryPath: regularFile,
+			expectedErrMsg: "already exist",
+			teardown:       func() {},
+		},
+		{
+			name:           "failure - dir is not empty",
+			repositoryPath: notEmptyDirectory,
+			expectedErrMsg: "not empty",
+			teardown:       func() {},
+		},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
@@ -117,14 +132,15 @@ func TestCreateRepository(t *testing.T) {
 			repo, err := CreateRepository(test.repositoryPath)
 			if test.expectedErrMsg == "" {
 				assert.Nil(t, err)
-			} else {
-				assert.EqualError(t, err, test.expectedErrMsg)
-			}
-			assert.Equal(t, test.expectedRepository, repo)
 
-			assert.True(t, isExistingDir(test.repositoryPath))
-			assert.True(t, isExistingDir(path.Join(test.repositoryPath, ".git")))
-			assert.True(t, isExistingFile(path.Join(test.repositoryPath, ".git", "config")))
+				assert.Equal(t, test.expectedRepository, repo)
+
+				assert.True(t, isExistingDir(test.repositoryPath))
+				assert.True(t, isExistingDir(path.Join(test.repositoryPath, ".git")))
+				assert.True(t, isExistingFile(path.Join(test.repositoryPath, ".git", "config")))
+			} else {
+				assert.True(t, strings.Contains(err.Error(), test.expectedErrMsg), fmt.Sprintf("expected '%s' to contain '%s'", err.Error(), test.expectedErrMsg))
+			}
 		})
 	}
 }
