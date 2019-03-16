@@ -1,7 +1,6 @@
 package git
 
 import (
-	"bufio"
 	"bytes"
 	"compress/zlib"
 	"crypto/sha1"
@@ -28,7 +27,6 @@ func CreateRepository(workTree string) (*Repository, error) {
 		return nil, err
 	}
 
-	// make sure that workTree is nonexistent or empty
 	if isExistingFile(workTree) {
 		return nil, fmt.Errorf("work tree already exist as regular file: %s", workTree)
 	}
@@ -231,9 +229,8 @@ func (r *Repository) ReadObject(sha string, expectedKind string) (Object, error)
 	case "tree":
 	case "tag":
 	case "blob":
-	default:
-		return nil, fmt.Errorf("unknown kind for object %v: %s", sha, kind)
 	}
+	return nil, fmt.Errorf("unknown kind for object %v: %s", sha, kind)
 }
 
 func (r *Repository) writeObject(obj Object, dryRun bool) (string, error) {
