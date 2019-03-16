@@ -32,8 +32,14 @@ func CreateRepository(workTree string) (*Repository, error) {
 		if err != nil {
 			return nil, err
 		}
-		if len(files) > 0 {
-			return nil, fmt.Errorf("work tree is not empty: %s", workTree)
+
+		// fail if workTree has files other than .git
+		if len(files) > 1 {
+			fileNames := make([]string, 0)
+			for _, file := range files {
+				fileNames = append(fileNames, file.Name())
+			}
+			return nil, fmt.Errorf("work tree is not empty: %s (%v)", workTree, fileNames)
 		}
 	} else {
 		if err := os.MkdirAll(workTree, 0777); err != nil {
@@ -139,7 +145,7 @@ func (r *Repository) writeToGitFile(content string, relPath ...string) error {
 	if err != nil {
 		return err
 	}
-	f, err := os.Open(filePath)
+	f, err := os.Create(filePath)
 	if err != nil {
 		return err
 	}
