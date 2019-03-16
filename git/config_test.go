@@ -17,7 +17,7 @@ func TestNewConfig(t *testing.T) {
 		{
 			name:           "no setting",
 			confFile:       strings.NewReader(""),
-			expectedConfig: &DefaultConfig,
+			expectedConfig: &defaultConfig,
 		},
 		{
 			name: "custom setting",
@@ -43,7 +43,7 @@ func TestNewConfig(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			config, err := NewConfig(test.confFile)
+			config, err := newConfig(test.confFile)
 			assert.Equal(t, test.expectedConfig, config)
 			if test.expectedErrMsg != "" {
 				assert.EqualError(t, err, test.expectedErrMsg)

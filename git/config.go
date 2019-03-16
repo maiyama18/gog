@@ -14,17 +14,17 @@ type Config struct {
 	Bare                    bool
 }
 
-var DefaultConfig = Config{
+var defaultConfig = Config{
 	RepositoryFormatVersion: 0,
 	FileMode:                true,
 	Bare:                    false,
 }
 
-func NewConfig(confFile io.Reader) (*Config, error) {
+func newConfig(confFile io.Reader) (*Config, error) {
 	sc := bufio.NewScanner(confFile)
 
 	// default conf
-	conf := &DefaultConfig
+	conf := &defaultConfig
 	for sc.Scan() {
 		line := strings.TrimSpace(sc.Text())
 		if strings.HasPrefix(line, "repositoryformatversion") {
@@ -62,7 +62,7 @@ func NewConfig(confFile io.Reader) (*Config, error) {
 	return conf, nil
 }
 
-func (c *Config) Format() string {
+func (c *Config) format() string {
 	return fmt.Sprintf(`[core]
 	repositoryformatversion = %d
 	filemode = %t

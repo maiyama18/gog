@@ -25,7 +25,7 @@ func TestNewRepository(t *testing.T) {
 			expectedRepository: &Repository{
 				WorkTree: nonExistentDirectory,
 				GitDir:   path.Join(nonExistentDirectory, ".git"),
-				Conf:     &DefaultConfig,
+				Conf:     &defaultConfig,
 			},
 		},
 		{
@@ -35,7 +35,7 @@ func TestNewRepository(t *testing.T) {
 			expectedRepository: &Repository{
 				WorkTree: notGitRepository,
 				GitDir:   path.Join(notGitRepository, ".git"),
-				Conf:     &DefaultConfig,
+				Conf:     &defaultConfig,
 			},
 		},
 		{
@@ -45,7 +45,7 @@ func TestNewRepository(t *testing.T) {
 			expectedRepository: &Repository{
 				WorkTree: gitRepository,
 				GitDir:   path.Join(gitRepository, ".git"),
-				Conf:     &DefaultConfig,
+				Conf:     &defaultConfig,
 			},
 		},
 		{
@@ -63,7 +63,7 @@ func TestNewRepository(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			repo, err := NewRepository(test.workTree, test.force)
+			repo, err := newRepository(test.workTree, test.force)
 
 			if test.expectedErrMsg == "" {
 				assert.Nil(t, err)

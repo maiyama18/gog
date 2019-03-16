@@ -17,7 +17,7 @@ type Repository struct {
 }
 
 func CreateRepository(workTree string) (*Repository, error) {
-	repo, err := NewRepository(workTree, true)
+	repo, err := newRepository(workTree, true)
 	if err != nil {
 		return nil, err
 	}
@@ -61,7 +61,7 @@ func CreateRepository(workTree string) (*Repository, error) {
 	if err := repo.writeToGitFile("ref: refs/heads/master\n", "HEAD"); err != nil {
 		return nil, err
 	}
-	if err := repo.writeToGitFile(repo.Conf.Format(), "config"); err != nil {
+	if err := repo.writeToGitFile(repo.Conf.format(), "config"); err != nil {
 		return nil, err
 	}
 
@@ -70,7 +70,7 @@ func CreateRepository(workTree string) (*Repository, error) {
 
 func FindRepository(curPath string, required bool) (*Repository, error) {
 	if isExistingDir(path.Join(curPath, ".git")) {
-		return NewRepository(curPath, false)
+		return newRepository(curPath, false)
 	}
 
 	if curPath == "/" {
@@ -84,14 +84,14 @@ func FindRepository(curPath string, required bool) (*Repository, error) {
 }
 
 // force disables all check for initializing repository, which is used when 'git init'.
-func NewRepository(workTree string, force bool) (*Repository, error) {
+func newRepository(workTree string, force bool) (*Repository, error) {
 	gitDir := path.Join(workTree, ".git")
 
 	if !force && !isExistingDir(gitDir) {
 		return nil, fmt.Errorf("not a git repository: %s", gitDir)
 	}
 
-	repo := &Repository{WorkTree: workTree, GitDir: gitDir, Conf: &DefaultConfig}
+	repo := &Repository{WorkTree: workTree, GitDir: gitDir, Conf: &defaultConfig}
 
 	confPath, err := repo.gitFile(false, "config")
 	if !force && err != nil {
@@ -162,7 +162,7 @@ func (r *Repository) readConf(force bool, confPath string) error {
 	if err != nil {
 		return err
 	}
-	conf, err := NewConfig(confFile)
+	conf, err := newConfig(confFile)
 	if err != nil {
 		return err
 	}
