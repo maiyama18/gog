@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"path"
 	"strconv"
@@ -19,25 +20,20 @@ type Config struct {
 var DefaultConfig = Config{
 	RepositoryFormatVersion: 0,
 	FileMode:                true,
-	Bare:                    true,
+	Bare:                    false,
 }
 
-func NewConfig(confPath string) (*Config, error) {
-	f, err := os.Open(confPath)
-	if err != nil {
-		return nil, err
-	}
-	sc := bufio.NewScanner(f)
+func NewConfig(confFile io.Reader) (*Config, error) {
+	sc := bufio.NewScanner(confFile)
 
 	// default conf
 	conf := &DefaultConfig
-
 	for sc.Scan() {
 		line := strings.TrimSpace(sc.Text())
 		if strings.HasPrefix(line, "repositoryformatversion") {
 			elems := strings.Split(line, "=")
 			if len(elems) == 2 {
-				vs := elems[1]
+				vs := strings.TrimSpace(elems[1])
 				v, err := strconv.Atoi(vs)
 				if err == nil {
 					conf.RepositoryFormatVersion = v
@@ -47,7 +43,7 @@ func NewConfig(confPath string) (*Config, error) {
 		if strings.HasPrefix(line, "filemode") {
 			elems := strings.Split(line, "=")
 			if len(elems) == 2 {
-				ms := elems[1]
+				ms := strings.TrimSpace(elems[1])
 				m, err := strconv.ParseBool(ms)
 				if err == nil {
 					conf.FileMode = m
@@ -57,7 +53,7 @@ func NewConfig(confPath string) (*Config, error) {
 		if strings.HasPrefix(line, "bare") {
 			elems := strings.Split(line, "=")
 			if len(elems) == 2 {
-				bs := elems[1]
+				bs := strings.TrimSpace(elems[1])
 				b, err := strconv.ParseBool(bs)
 				if err == nil {
 					conf.Bare = b
@@ -134,7 +130,12 @@ func (r *Repository) readConf(force bool, confPath string) error {
 		}
 		return nil
 	}
-	conf, err := NewConfig(confPath)
+
+	confFile, err := os.Open(confPath)
+	if err != nil {
+		return err
+	}
+	conf, err := NewConfig(confFile)
 	if err != nil {
 		return err
 	}
