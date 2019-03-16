@@ -66,7 +66,7 @@ func TestNewRepository(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			repo, err := newRepository(test.workTree, test.force)
+			repo, err := NewRepository(test.workTree, test.force)
 
 			if test.expectedErrMsg == "" {
 				assert.Nil(t, err)
@@ -176,7 +176,7 @@ func TestRepository_ReadObject(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			r, err := newRepository(gitRepository, true)
+			r, err := NewRepository(gitRepository, true)
 			if err != nil {
 				t.Fatal(err)
 				t.FailNow()

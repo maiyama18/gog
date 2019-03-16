@@ -22,7 +22,7 @@ type Repository struct {
 }
 
 func CreateRepository(workTree string) (*Repository, error) {
-	repo, err := newRepository(workTree, true)
+	repo, err := NewRepository(workTree, true)
 	if err != nil {
 		return nil, err
 	}
@@ -80,7 +80,7 @@ func CreateRepository(workTree string) (*Repository, error) {
 
 func FindRepository(curPath string, required bool) (*Repository, error) {
 	if isExistingDir(path.Join(curPath, ".git")) {
-		return newRepository(curPath, false)
+		return NewRepository(curPath, false)
 	}
 
 	if curPath == "/" {
@@ -94,7 +94,7 @@ func FindRepository(curPath string, required bool) (*Repository, error) {
 }
 
 // force disables all check for initializing repository, which is used when 'git init'.
-func newRepository(workTree string, force bool) (*Repository, error) {
+func NewRepository(workTree string, force bool) (*Repository, error) {
 	gitDir := path.Join(workTree, ".git")
 
 	if !force && !isExistingDir(gitDir) {
@@ -244,7 +244,7 @@ func (r *Repository) WriteObject(obj Object, dryRun bool) (string, error) {
 	hw.Write([]byte{0})
 	_, _ = io.WriteString(hw, data)
 
-	sha := string(hw.Sum(nil))
+	sha := fmt.Sprintf("%x", hw.Sum(nil))
 
 	if !dryRun {
 		if err := r.writeToGitFile(sha, "objects", sha[0:2], sha[2:]); err != nil {

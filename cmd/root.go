@@ -29,6 +29,7 @@ func init() {
 
 	rootCmd.AddCommand(initCmd)
 	rootCmd.AddCommand(catFileCmd)
+	rootCmd.AddCommand(hashObjectCmd)
 }
 
 func Execute() {
