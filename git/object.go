@@ -3,11 +3,15 @@ package git
 type Object interface {
 	Kind() string
 	Serialize() string
-	Deserialize()
+	Deserialize(data string)
 }
 
 type Blob struct {
 	blobData string
+}
+
+func NewBlob(blobData string) *Blob {
+	return &Blob{blobData: blobData}
 }
 
 func (b *Blob) Kind() string {

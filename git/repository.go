@@ -229,11 +229,12 @@ func (r *Repository) ReadObject(sha string, expectedKind string) (Object, error)
 	case "tree":
 	case "tag":
 	case "blob":
+		return NewBlob(string(raw)), nil
 	}
 	return nil, fmt.Errorf("unknown kind for object %v: %s", sha, kind)
 }
 
-func (r *Repository) writeObject(obj Object, dryRun bool) (string, error) {
+func (r *Repository) WriteObject(obj Object, dryRun bool) (string, error) {
 	data := obj.Serialize()
 
 	hw := sha1.New()

@@ -144,3 +144,39 @@ func TestCreateRepository(t *testing.T) {
 		})
 	}
 }
+
+const shaHello = "ce013625030ba8dba906f756967f9e9ca394464a"
+
+func TestRepository_ReadObject(t *testing.T) {
+	tests := []struct {
+		name           string
+		sha            string
+		kind           string
+		expectedObject Object
+		expectedErrMsg string
+	}{
+		{
+			name:           "success",
+			sha:            shaHello,
+			kind:           "blob",
+			expectedObject: NewBlob("hello\n"),
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			r, err := newRepository(gitRepository, true)
+			if err != nil {
+				t.Fatal(err)
+				t.FailNow()
+			}
+			obj, err := r.ReadObject(test.sha, test.kind)
+			if test.expectedErrMsg == "" {
+				assert.Nil(t, err)
+
+				assert.Equal(t, test.expectedObject, obj)
+			} else {
+				assert.True(t, strings.Contains(err.Error(), test.expectedErrMsg), fmt.Sprintf("expected '%s' to contain '%s'", err.Error(), test.expectedErrMsg))
+			}
+		})
+	}
+}

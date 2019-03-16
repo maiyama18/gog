@@ -12,8 +12,8 @@ var catFileCmd = &cobra.Command{
 	Short: "show git object contents",
 	Run: func(cmd *cobra.Command, args []string) {
 		var kind, sha string
-		if len(args) != 0 {
-			_, _ = fmt.Fprintln(os.Stderr, "type and sha-1 of the object should be provided")
+		if len(args) != 2 {
+			handleError("type and sha-1 of the object should be provided")
 		}
 
 		pwd, err := os.Getwd()
