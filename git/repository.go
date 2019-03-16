@@ -68,6 +68,21 @@ func CreateRepository(workTree string) (*Repository, error) {
 	return repo, nil
 }
 
+func FindRepository(curPath string, required bool) (*Repository, error) {
+	if isExistingDir(path.Join(curPath, ".git")) {
+		return NewRepository(curPath, false)
+	}
+
+	if curPath == "/" {
+		if required {
+			return nil, errors.New("couldn't find git repository")
+		}
+		return nil, nil
+	}
+
+	return FindRepository(path.Dir(curPath), required)
+}
+
 // force disables all check for initializing repository, which is used when 'git init'.
 func NewRepository(workTree string, force bool) (*Repository, error) {
 	gitDir := path.Join(workTree, ".git")
