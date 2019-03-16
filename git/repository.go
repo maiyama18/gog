@@ -1,11 +1,17 @@
 package git
 
 import (
+	"bufio"
+	"bytes"
+	"compress/zlib"
+	"crypto/sha1"
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 	"path"
+	"strconv"
 )
 
 const defaultDescription = "Unnamed repository; edit this file 'description' to name the repository.\n"
@@ -174,6 +180,81 @@ func (r *Repository) readConf(force bool, confPath string) error {
 	}
 	r.Conf = conf
 	return nil
+}
+
+func (r *Repository) ReadObject(sha string, expectedKind string) (Object, error) {
+	objPath, err := r.gitFile(false, "objects", sha[:2], sha[2:])
+	if err != nil {
+		return nil, err
+	}
+
+	f, err := os.Open(objPath)
+	if err != nil {
+		return nil, err
+	}
+	rd, err := zlib.NewReader(f)
+	if err != nil {
+		return nil, err
+	}
+	defer rd.Close()
+
+	raw, err := ioutil.ReadAll(rd)
+	if err != nil {
+		return nil, err
+	}
+
+	si := bytes.Index(raw, []byte(" "))
+	if si < 0 {
+		return nil, fmt.Errorf("contents of %s does not contain space: %v", sha, raw)
+	}
+	kind := string(raw[0:si])
+	if kind != expectedKind {
+		return nil, fmt.Errorf("object type mismatch: provided=%s, got=%s", expectedKind, kind)
+	}
+	raw = raw[si+1:]
+
+	ni := bytes.Index(raw, []byte{0})
+	if ni < 0 {
+		return nil, fmt.Errorf("contents of %s does not contain null char: %v", sha, raw)
+	}
+	size, err := strconv.Atoi(string(raw[0:ni]))
+	if err != nil {
+		return nil, err
+	}
+	raw = raw[ni+1:]
+	if size != len(raw) {
+		return nil, fmt.Errorf("wrong length of object %s: header says=%d, actual=%d", sha, size, len(raw))
+	}
+
+	switch kind {
+	case "commit":
+	case "tree":
+	case "tag":
+	case "blob":
+	default:
+		return nil, fmt.Errorf("unknown kind for object %v: %s", sha, kind)
+	}
+}
+
+func (r *Repository) writeObject(obj Object, dryRun bool) (string, error) {
+	data := obj.Serialize()
+
+	hw := sha1.New()
+	_, _ = io.WriteString(hw, obj.Kind())
+	_, _ = io.WriteString(hw, " ")
+	_, _ = io.WriteString(hw, strconv.Itoa(len(data)))
+	hw.Write([]byte{0})
+	_, _ = io.WriteString(hw, data)
+
+	sha := string(hw.Sum(nil))
+
+	if !dryRun {
+		if err := r.writeToGitFile(sha, "objects", sha[0:2], sha[2:]); err != nil {
+			return "", err
+		}
+	}
+
+	return sha, nil
 }
 
 func isExistingDir(filePath string) bool {

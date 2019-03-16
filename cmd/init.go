@@ -1,10 +1,8 @@
 package cmd
 
 import (
-	"fmt"
 	"github.com/spf13/cobra"
 	"gog/git"
-	"os"
 )
 
 var initCmd = &cobra.Command{
@@ -19,7 +17,7 @@ var initCmd = &cobra.Command{
 		}
 
 		if _, err := git.CreateRepository(repoPath); err != nil {
-			_, _ = fmt.Fprintln(os.Stderr, err.Error())
+			handleError(err.Error())
 		}
 	},
 }
