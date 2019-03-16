@@ -224,7 +224,7 @@ func (r *Repository) ReadObject(sha string, expectedKind string) (Object, error)
 		return nil, fmt.Errorf("wrong length of object %s: header says=%d, actual=%d", sha, size, len(raw))
 	}
 
-	switch kind {
+	switch expectedKind {
 	case "commit":
 	case "tree":
 	case "tag":

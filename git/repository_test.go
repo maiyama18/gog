@@ -161,6 +161,18 @@ func TestRepository_ReadObject(t *testing.T) {
 			kind:           "blob",
 			expectedObject: NewBlob("hello\n"),
 		},
+		{
+			name:           "failure - invalid sha",
+			sha:            "invalid sha",
+			kind:           "blob",
+			expectedErrMsg: "not a directory",
+		},
+		{
+			name:           "failure - wrong kind",
+			sha:            shaHello,
+			kind:           "commit",
+			expectedErrMsg: "type mismatch",
+		},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
