@@ -229,7 +229,7 @@ func (r *Repository) ReadObject(sha string, expectedKind string) (Object, error)
 	case "tree":
 	case "tag":
 	case "blob":
-		return NewBlob(string(raw)), nil
+		return NewBlob(raw), nil
 	}
 	return nil, fmt.Errorf("unknown kind for object %v: %s", sha, kind)
 }
@@ -242,7 +242,7 @@ func (r *Repository) WriteObject(obj Object, dryRun bool) (string, error) {
 	_, _ = io.WriteString(hw, " ")
 	_, _ = io.WriteString(hw, strconv.Itoa(len(data)))
 	hw.Write([]byte{0})
-	_, _ = io.WriteString(hw, data)
+	hw.Write(data)
 
 	sha := fmt.Sprintf("%x", hw.Sum(nil))
 

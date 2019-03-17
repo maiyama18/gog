@@ -159,7 +159,7 @@ func TestRepository_ReadObject(t *testing.T) {
 			name:           "success",
 			sha:            shaHello,
 			kind:           "blob",
-			expectedObject: NewBlob("hello\n"),
+			expectedObject: NewBlob([]byte("hello\n")),
 		},
 		{
 			name:           "failure - invalid sha",
